@@ -14,7 +14,10 @@ def build_model(lookback):
     )
 
     model.add(
-        Dense(32, activation="relu")
+        Dense(
+            32,
+            activation="relu"
+        )
     )
 
     model.add(

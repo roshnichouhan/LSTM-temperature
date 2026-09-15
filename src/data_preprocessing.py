@@ -1,58 +1,38 @@
-import numpy as np
 import pandas as pd
+import numpy as np
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.model_selection import train_test_split
 
 
-def load_data(file_path):
-    df = pd.read_csv(file_path)
+def prepare_data(data_path, lookback):
 
-    print("Dataset:")
-    print(df.head())
+    # Load CSV
+    df = pd.read_csv(data_path)
 
-    print("\nShape:")
-    print(df.shape)
+    # Get temperature column
+    temperature = df["temperature"].values.reshape(-1, 1)
 
-    return df
+    # Scale values between 0 and 1
+    scaler = MinMaxScaler()
+    temperature_scaled = scaler.fit_transform(temperature)
 
-
-def create_sequences(data, lookback=5):
+    # Create sequences
     X = []
     y = []
 
-    for i in range(lookback, len(data)):
-        X.append(data[i - lookback:i])
-        y.append(data[i])
+    for i in range(len(temperature_scaled) - lookback):
+        X.append(temperature_scaled[i:i + lookback])
+        y.append(temperature_scaled[i + lookback])
 
-    return np.array(X), np.array(y)
+    X = np.array(X)
+    y = np.array(y)
 
-
-def prepare_data(file_path, lookback=5):
-
-    df = load_data(file_path)
-
-    temperatures = df["temperature"].values.reshape(-1, 1)
-
-    scaler = MinMaxScaler()
-
-    scaled_temperature = scaler.fit_transform(temperatures)
-
-    X, y = create_sequences(
-        scaled_temperature,
-        lookback
+    # Split data
+    X_train, X_test, y_train, y_test = train_test_split(
+        X,
+        y,
+        test_size=0.2,
+        shuffle=False
     )
 
-    split_index = int(len(X) * 0.8)
-
-    X_train = X[:split_index]
-    X_test = X[split_index:]
-
-    y_train = y[:split_index]
-    y_test = y[split_index:]
-
-    return (
-        X_train,
-        X_test,
-        y_train,
-        y_test,
-        scaler
-    )
+    return X_train, X_test, y_train, y_test, scaler
